@@ -15,7 +15,6 @@ class IbdataController < ApplicationController
 		# Note that we have to look the ticker id of each incoming message
 		# up in local memory to figure out what it's for.
 		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
-		  debugger
 		  puts @contracts[msg.request_id].description + ": #{msg.count} items:"
 		  msg.results.each { |entry| puts " #{entry}" }
 		end
