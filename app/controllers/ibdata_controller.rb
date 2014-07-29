@@ -1,39 +1,8 @@
 class IbdataController < ApplicationController
 	def historical_data
-       @contracts = {123 => IB::Symbols::Stocks[:vxx]}
-
-		# Connect to IB TWS.
-		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
-
-		# Subscribe to TWS alerts/errors
-		ib.subscribe(:Alert) { |msg| puts msg.to_human }
-
-		# Subscribe to HistoricalData incoming events. The code passed in the block
-		# will be executed when a message of that type is received, with the received
-		# message as its argument. In this case, we just print out the data.
-		#
-		# Note that we have to look the ticker id of each incoming message
-		# up in local memory to figure out what it's for.
-		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
-		  puts @contracts[msg.request_id].description + ": #{msg.count} items:"
-		  msg.results.each { |entry| puts " #{entry}" }
-		end
-		
-		@contracts.each_pair do |request_id, contract|
-		    ib.send_message IB::Messages::Outgoing::RequestHistoricalData.new(
-		                      :request_id => request_id,
-		                      :contract => contract,
-		                      :end_date_time => Time.now.to_ib,
-		                      :duration => '30 D', # ?
-		                      :bar_size => '1 hour', # IB::BAR_SIZES.key(:hour)?
-		                      :what_to_show => :trades,
-		                      :use_rth => 1,
-		                      :format_date => 1)
-		end
-		puts "\n******** Press <Enter> to exit... *********\n\n"
-        STDIN.gets
-
-    end
+	  fetch_historical_data
+	  @historical_data = IbBar.all
+	end
 
     def option_data
     	@market = {1 => IB::Symbols::Options[:wfc20],
@@ -71,5 +40,48 @@ class IbdataController < ApplicationController
 		@market.each_pair { |id, contract| ib.send_message :CancelMarketData, :id => id }
 		
     end	
+
+    private
+
+    def fetch_historical_data
+    	@contracts = {123 => IB::Symbols::Stocks[:vxx]}
+
+		# Connect to IB TWS.
+		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
+
+		# Subscribe to TWS alerts/errors
+		ib.subscribe(:Alert) { |msg| puts msg.to_human }
+
+		# Subscribe to HistoricalData incoming events. The code passed in the block
+		# will be executed when a message of that type is received, with the received
+		# message as its argument. In this case, we just print out the data.
+		#
+		# Note that we have to look the ticker id of each incoming message
+		# up in local memory to figure out what it's for.
+		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
+		  puts @contracts[msg.request_id].description + ": #{msg.count} items:"
+		   msg.results.each { |entry|
+			puts entry.new_record?
+			puts entry.persisted?
+			puts entry.save
+			puts entry.persisted?
+			puts "next record" 
+		  }
+		  @last_msg_time = Time.now.to_i
+		end
+		
+		@contracts.each_pair do |request_id, contract|
+		    ib.send_message IB::Messages::Outgoing::RequestHistoricalData.new(
+		                      :request_id => request_id,
+		                      :contract => contract,
+		                      :end_date_time => Time.now.to_ib,
+		                      :duration => '30 D', # ?
+		                      :bar_size => '1 hour', # IB::BAR_SIZES.key(:hour)?
+		                      :what_to_show => :trades,
+		                      :use_rth => 1,
+		                      :format_date => 1)
+		end
+		sleep 0.1 until @last_msg_time && @last_msg_time < Time.now.to_i + 0.5
+    end 
 
 end
