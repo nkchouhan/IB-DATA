@@ -1,14 +1,11 @@
 class IbdataController < ApplicationController
-	def historical_data
+    def historical_data
 	  fetch_historical_data
-	  @historical_data = IbBar.all
+	  @contracts = IbContract.all
 	end
 
     def option_data
-    	@market = {1 => IB::Symbols::Options[:wfc20],
-           2 => IB::Symbols::Options[:z50],
-           3 => IB::Symbols::Options[:spy75],
-           4 => IB::Symbols::Options[:spy100]}
+    	@market = {1 => IB::Symbols::Options[:aapl95]}
 
 		# First, connect to IB TWS. Arbitrary :client_id is used to identify your script
 		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
@@ -16,13 +13,13 @@ class IbdataController < ApplicationController
 		## Subscribe to TWS alerts/errors
 		ib.subscribe(:Alert) { |msg| puts msg.to_human }
 
-		# Subscribe to Ticker... events. The code passed in the block will be executed when
+		# Subscribe to Ticker... events.  The code passed in the block will be executed when
 		# any message of that type is received, with the received message as its argument.
 		# In this case, we just print out the tick.
 		#
 		# (N.B. The description field is not from IB TWS. It is defined
-		# locally in forex.rb, and is just arbitrary text.)
-		ib.subscribe(:TickPrice, :TickSize, :TickOption, :TickString) do |msg|
+		#  locally in forex.rb, and is just arbitrary text.)
+        ib.subscribe(:TickPrice, :TickSize, :TickOption, :TickString) do |msg|
 		  what = @market[msg.ticker_id].description || @market[msg.ticker_id].osi
 		  puts "#{msg.ticker_id}: #{what}: #{msg.to_human}"
 		end
@@ -44,8 +41,8 @@ class IbdataController < ApplicationController
     private
 
     def fetch_historical_data
-    	@contracts = {123 => IB::Symbols::Stocks[:vxx]}
-
+    	@contracts = {123 => IB::Symbols::Stocks[:aapl]}
+        
 		# Connect to IB TWS.
 		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
 
@@ -60,9 +57,15 @@ class IbdataController < ApplicationController
 		# up in local memory to figure out what it's for.
 		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
 		  puts @contracts[msg.request_id].description + ": #{msg.count} items:"
+		  contract = IbContract.find_or_create_by_symbol_and_currency_and_expiry_and_strike(
+		  	@contracts[msg.request_id].symbol,
+		  	@contracts[msg.request_id].currency, 
+		  	@contracts[msg.request_id].expiry, 
+		  	@contracts[msg.request_id].strike)
 		   msg.results.each { |entry|
-			puts entry.new_record?
+		   	puts entry.new_record?
 			puts entry.persisted?
+			entry.ib_contract_id = contract.id
 			puts entry.save
 			puts entry.persisted?
 			puts "next record" 
@@ -71,7 +74,7 @@ class IbdataController < ApplicationController
 		end
 		
 		@contracts.each_pair do |request_id, contract|
-		    ib.send_message IB::Messages::Outgoing::RequestHistoricalData.new(
+			ib.send_message IB::Messages::Outgoing::RequestHistoricalData.new(
 		                      :request_id => request_id,
 		                      :contract => contract,
 		                      :end_date_time => Time.now.to_ib,

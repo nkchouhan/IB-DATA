@@ -1,1 +1,10 @@
-<%= @historical_data %>
+<% @contracts.each do |contract| %>
+  <h1>Symbol: <%= contract.symbol %> </h1></br>
+  <h1>Strike: <%= contract.strike %> </h1></br>
+  <h1>Currency: <%= contract.currency %> </h1></br>
+  <h1>Expiry: <%= contract.expiry %> </h1></br>
+  <p>Followinf are the IBBAR data associated with above contract</p>
+  <%= contract.ib_bars %>
+<% end %>  
+
+  
