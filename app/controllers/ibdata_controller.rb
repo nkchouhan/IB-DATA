@@ -1,6 +1,11 @@
 class IbdataController < ApplicationController
+    
+    def index
+      
+    end 
+
     def historical_data
-	  fetch_historical_data
+      fetch_historical_data params[:symbol].to_sym	
 	  @contracts = IbContract.all
 	end
 
@@ -40,8 +45,8 @@ class IbdataController < ApplicationController
 
     private
 
-    def fetch_historical_data
-    	@contracts = {123 => IB::Symbols::Stocks[:aapl]}
+    def fetch_historical_data symbol
+    	@contracts = {123 => IB::Symbols::Stocks[symbol] }
         
 		# Connect to IB TWS.
 		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
@@ -63,13 +68,9 @@ class IbdataController < ApplicationController
 		  	@contracts[msg.request_id].expiry, 
 		  	@contracts[msg.request_id].strike)
 		   msg.results.each { |entry|
-		   	puts entry.new_record?
-			puts entry.persisted?
-			entry.ib_contract_id = contract.id
+		   	entry.ib_contract_id = contract.id
 			puts entry.save
-			puts entry.persisted?
-			puts "next record" 
-		  }
+		}
 		  @last_msg_time = Time.now.to_i
 		end
 		

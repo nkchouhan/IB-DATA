@@ -1,8 +1,8 @@
 <% @contracts.each do |contract| %>
-  <h1>Symbol: <%= contract.symbol %> </h1></br>
-  <h1>Strike: <%= contract.strike %> </h1></br>
-  <h1>Currency: <%= contract.currency %> </h1></br>
-  <h1>Expiry: <%= contract.expiry %> </h1></br>
+  <h4>Symbol: <%= contract.symbol %> </h4></br>
+  <h4>Strike: <%= contract.strike %> </h4></br>
+  <h4>Currency: <%= contract.currency %> </h4></br>
+  <h4>Expiry: <%= contract.expiry %> </h4></br>
   <p>Followinf are the IBBAR data associated with above contract</p>
   <%= contract.ib_bars %>
 <% end %>  
