@@ -5,7 +5,7 @@ class IbdataController < ApplicationController
     end 
 
     def historical_data
-      fetch_historical_data params[:symbol].to_sym	
+      fetch_historical_data params	
 	  @contracts = IbContract.all
 	end
 
@@ -45,8 +45,12 @@ class IbdataController < ApplicationController
 
     private
 
-    def fetch_historical_data symbol
-    	@contracts = {123 => IB::Symbols::Stocks[symbol] }
+    def fetch_historical_data params
+    	debugger
+    	@contracts = {123 => IB::Contract.new(:symbol => params[:symbol].upcase,
+                                    :currency => params[:currency].upcase,
+                                    :sec_type => params[:sec_type].downcase.to_sym,
+                                    :description => params[:description]) }
         
 		# Connect to IB TWS.
 		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
