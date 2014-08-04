@@ -1,0 +1,5 @@
+<%= form_tag( ibdata_historical_data_path , method: :post) do %>
+  <label>Historical data symbol</label>
+  <%= text_field_tag 'symbol' %>
+  <%= submit_tag 'submit'%>
+<% end %>
