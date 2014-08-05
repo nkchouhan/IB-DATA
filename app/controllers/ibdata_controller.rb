@@ -5,9 +5,14 @@ class IbdataController < ApplicationController
     end 
 
     def historical_data
-      fetch_historical_data params	
-	  @contracts = IbContract.all
-	end
+      @contract = IbContract.find(params[:id])
+      hash = {}
+      @contract.instance_variables.each {|var| hash[var.to_s.delete("@")] = @contract.instance_variable_get(var) }
+      hash = hash['attributes'].delete_if{ |k, v| v.nil? || v == '' || k == 'created_at'|| k == 'updated_at' }	
+      hash['sec_type'] = hash['sec_type'].to_sym
+      hash['currency'] = hash['currency'].upcase 
+      fetch_historical_data hash    
+    end
 
     def option_data
     	@market = {1 => IB::Symbols::Options[:aapl95]}
@@ -45,11 +50,10 @@ class IbdataController < ApplicationController
 
     private
 
-    def fetch_historical_data params
-    	@contracts = {123 => IB::Contract.new(:symbol => params[:symbol].upcase,
-                                    :currency => params[:currency].upcase,
-                                    :sec_type => params[:sec_type].downcase.to_sym,
-                                    :description => params[:description]) }
+    def fetch_historical_data contract
+    	contract_id = contract['id']
+    	contract = contract.delete_if{|k,v| k == 'id'}
+    	@contracts = {123 => IB::Contract.new(contract)}
         
 		# Connect to IB TWS.
 		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
@@ -64,14 +68,9 @@ class IbdataController < ApplicationController
 		# Note that we have to look the ticker id of each incoming message
 		# up in local memory to figure out what it's for.
 		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
-		  puts @contracts[msg.request_id].description + ": #{msg.count} items:"
-		  contract = IbContract.find_or_create_by_symbol_and_currency_and_expiry_and_strike(
-		  	@contracts[msg.request_id].symbol,
-		  	@contracts[msg.request_id].currency, 
-		  	@contracts[msg.request_id].expiry, 
-		  	@contracts[msg.request_id].strike)
+		puts @contracts[msg.request_id].legs_description + ": #{msg.count} items:"
 		   msg.results.each { |entry|
-		   	entry.ib_contract_id = contract.id
+		   	entry.ib_contract_id = contract_id
 			puts entry.save
 		}
 		  @last_msg_time = Time.now.to_i
