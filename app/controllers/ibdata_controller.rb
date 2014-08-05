@@ -46,7 +46,6 @@ class IbdataController < ApplicationController
     private
 
     def fetch_historical_data params
-    	debugger
     	@contracts = {123 => IB::Contract.new(:symbol => params[:symbol].upcase,
                                     :currency => params[:currency].upcase,
                                     :sec_type => params[:sec_type].downcase.to_sym,

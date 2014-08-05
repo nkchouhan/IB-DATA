@@ -1,0 +1,49 @@
+<div>
+  <%= link_to "Create New Contract", new_ib_contract_path, class: 'btn btn-primary' %>
+</div>
+<h5> Following are the available contracts </h5>
+
+<table class="table table-striped table-bordered">
+  <tr>
+  	<th> Con Id </th>
+  	<th> sec_type </th>
+  	<th> strike </th>
+  	<th> currency </th>
+  	<th> sec_id_type </th>
+  	<th> sec_id </th>
+  	<th> legs_description </th>
+  	<th> symbol </th>
+  	<th> local_symbol </th>
+  	<th> currency </th>
+  	<th> multiplier </th>
+  	<th> expiry </th>
+  	<th> exchange </th>
+  	<th> primary_exchange </th>
+  	<th> include_expired </th>
+  	<th> right </th>
+  	<th> type </th>
+  </tr>	
+  <% @contracts.each do |contract| %>
+    <tr>
+      	<td> <%= contract.con_id %> </td>
+	  	<td> <%= contract.sec_type %> </td>
+	  	<td> <%= contract.strike %> </td>
+	  	<td> <%= contract.currency %> </td>
+	  	<tD> <%= contract.sec_id_type %> </td>
+	  	<td> <%= contract.sec_id %> </td>
+	  	<td> <%= contract.legs_description %> </td>
+	  	<td> <%= contract.symbol %> </td>
+	  	<td> <%= contract.local_symbol %> </td>
+	  	<td> <%= contract.currency %> </td>
+	  	<td> <%= contract.multiplier %> </td>
+	  	<td> <%= contract.expiry %> </td>
+	  	<td> <%= contract.exchange %> </td>
+	  	<td> <%= contract.primary_exchange %> </td>
+	  	<td> <%= contract.include_expired %> </td>
+	  	<td> <%= contract.right %> </td>
+	  	<td> <%= contract.type %> </td>
+	  	<td> <%= link_to "Edit Contract", edit_ib_contract_path(contract), class: 'btn btn-primary' %> </td>
+	  	<td> <%= link_to "Delete Contract", ib_contract_path(contract), method: :delete , class: 'btn btn-danger' %> </td>
+    </tr>	
+  <% end %>
+<table>
