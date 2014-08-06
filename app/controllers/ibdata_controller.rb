@@ -53,6 +53,7 @@ class IbdataController < ApplicationController
     def fetch_historical_data contract
     	contract_id = contract['id']
     	contract = contract.delete_if{|k,v| k == 'id'}
+
     	@contracts = {123 => IB::Contract.new(contract)}
         
 		# Connect to IB TWS.
@@ -68,7 +69,6 @@ class IbdataController < ApplicationController
 		# Note that we have to look the ticker id of each incoming message
 		# up in local memory to figure out what it's for.
 		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
-		puts @contracts[msg.request_id].legs_description + ": #{msg.count} items:"
 		   msg.results.each { |entry|
 		   	entry.ib_contract_id = contract_id
 			puts entry.save

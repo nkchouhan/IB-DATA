@@ -14,7 +14,6 @@
   	<th> legs_description </th>
   	<th> symbol </th>
   	<th> local_symbol </th>
-  	<th> currency </th>
   	<th> multiplier </th>
   	<th> expiry </th>
   	<th> exchange </th>
@@ -34,8 +33,7 @@
 	  	<td> <%= contract.legs_description %> </td>
 	  	<td> <%= contract.symbol %> </td>
 	  	<td> <%= contract.local_symbol %> </td>
-	  	<td> <%= contract.currency %> </td>
-	  	<td> <%= contract.multiplier %> </td>
+      <td> <%= contract.multiplier %> </td>
 	  	<td> <%= contract.expiry %> </td>
 	  	<td> <%= contract.exchange %> </td>
 	  	<td> <%= contract.primary_exchange %> </td>
@@ -44,7 +42,7 @@
 	  	<td> <%= contract.type %> </td>
 	  	<td> <%= link_to "Edit Contract", edit_ib_contract_path(contract), class: 'btn btn-primary' %> </td>
 	  	<td> <%= link_to "Delete Contract", ib_contract_path(contract), method: :delete , class: 'btn btn-danger' %> </td>
-      <td> <%= link_to "Fetch historical data", ibdata_historical_data_path(:id => contract.id) , class: 'btn btn-primary' %> </td>
+      <td> <%= link_to "Fetch historical data", ibdata_historical_data_path(:id => contract) , class: 'btn btn-primary' %> </td>
     </tr>	
   <% end %>
 <table>
