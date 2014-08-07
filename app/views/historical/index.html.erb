@@ -1,0 +1,4 @@
+<% @contracts.each do |contract| %>
+  <h1><%= contract.symbol %></h1></br>
+  <%= contract.ib_bars %>
+<% end %>

@@ -50,8 +50,10 @@ IBDATA::Application.routes.draw do
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
    resources :ib_contracts
+   resources :historical, only: ['show', 'index']
    match 'ibdata/option_data' => 'ibdata#option_data'
    match 'ibdata/historical_data' => 'ibdata#historical_data'
+   match 'ibdata/historical_data_for_all_contracts' => 'ibdata#historical_data_for_all_contracts'
    root :to => 'ib_contracts#index'
 
   # See how all your routes lay out with "rake routes"

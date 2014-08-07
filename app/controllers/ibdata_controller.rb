@@ -5,14 +5,29 @@ class IbdataController < ApplicationController
     end 
 
     def historical_data
-      @contract = IbContract.find(params[:id])
+      hash = prepare_contract params[:id]	
+      fetch_historical_data hash
+      redirect_to historical_path(params[:id])
+    end
+
+    def historical_data_for_all_contracts
+      contract_ids = IbContract.all.map(&:id)
+      contract_ids.each do |contract_id, index|
+      	hash = prepare_contract contract_id
+        fetch_historical_data hash
+      end
+      redirect_to historical_index_path
+    end
+    
+    def prepare_contract contract_id
+      contract = IbContract.find(contract_id)
       hash = {}
-      @contract.instance_variables.each {|var| hash[var.to_s.delete("@")] = @contract.instance_variable_get(var) }
+      contract.instance_variables.each {|var| hash[var.to_s.delete("@")] = contract.instance_variable_get(var) }
       hash = hash['attributes'].delete_if{ |k, v| v.nil? || v == '' || k == 'created_at'|| k == 'updated_at' }	
       hash['sec_type'] = hash['sec_type'].to_sym
       hash['currency'] = hash['currency'].upcase 
-      fetch_historical_data hash    
-    end
+      hash
+    end	
 
     def option_data
     	@market = {1 => IB::Symbols::Options[:aapl95]}
@@ -48,6 +63,8 @@ class IbdataController < ApplicationController
 		
     end	
 
+
+
     private
 
     def fetch_historical_data contract
@@ -56,18 +73,12 @@ class IbdataController < ApplicationController
 
     	@contracts = {123 => IB::Contract.new(contract)}
         
-		# Connect to IB TWS.
-		ib = IB::Connection.new :client_id => 1112 #, :port => 7496 # TWS
+        client_id = generate_unique_client_id
 
-		# Subscribe to TWS alerts/errors
-		ib.subscribe(:Alert) { |msg| puts msg.to_human }
+        ib =  IB::Connection.new :client_id => client_id
+        
+        ib.subscribe(:Alert) { |msg| puts msg.to_human }
 
-		# Subscribe to HistoricalData incoming events. The code passed in the block
-		# will be executed when a message of that type is received, with the received
-		# message as its argument. In this case, we just print out the data.
-		#
-		# Note that we have to look the ticker id of each incoming message
-		# up in local memory to figure out what it's for.
 		ib.subscribe(IB::Messages::Incoming::HistoricalData) do |msg|
 		   msg.results.each { |entry|
 		   	entry.ib_contract_id = contract_id
@@ -88,6 +99,16 @@ class IbdataController < ApplicationController
 		                      :format_date => 1)
 		end
 		sleep 0.1 until @last_msg_time && @last_msg_time < Time.now.to_i + 0.5
-    end 
+	end
+
+    def generate_unique_client_id 
+      unique_client_id = nil	
+      while true do
+        unique_client_id = rand(1000 .. 9999)
+        break  unless UniqueClientId.find_by_client_id(unique_client_id).present?
+      end 
+      UniqueClientId.create(client_id: unique_client_id)
+      unique_client_id 
+    end	
 
 end
